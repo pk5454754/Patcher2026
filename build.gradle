@@ -1,0 +1,72 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.intellij' version '1.13.3'
+}
+
+// 配置 Gradle 缓存策略
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+// 配置 JVM 参数以避免 Java agent 问题
+tasks.withType(JavaExec) {
+    jvmArgs = ['-Xmx2048m']
+    systemProperty 'java.awt.headless', 'false'
+}
+
+group 'cn.pk5454754'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+//    mavenCentral()
+    maven {
+        url 'https://maven.aliyun.com/nexus/content/repositories/google'
+    }
+    maven {
+        url 'https://maven.aliyun.com/nexus/content/groups/public/'
+    }
+    maven {
+        url 'https://maven.aliyun.com/nexus/content/repositories/jcenter'
+    }
+}
+
+dependencies {
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+// See https://github.com/JetBrains/gradle-intellij-plugin/
+intellij {
+    version = '2024.2.6'
+    plugins = ['java']
+    updateSinceUntilBuild = false
+}
+
+patchPluginXml {
+    sinceBuild = '223'
+    untilBuild = '242.*'
+}
+
+// 禁用可能失败的任务
+tasks.named('buildSearchableOptions') {
+    enabled = false
+}
+
+// 禁用初始化插件检查，避免网络问题导致失败
+tasks.named('initializeIntelliJPlugin') {
+    enabled = false
+}
+
+// 配置 runIde 任务以避免 Java agent 问题
+tasks.named('runIde') {
+    maxHeapSize = '2048m'
+    jvmArgs = ['-Xmx2048m', '-Didea.cycle.buffer.size=disabled']
+}

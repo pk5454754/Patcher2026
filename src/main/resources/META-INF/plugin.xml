@@ -1,0 +1,64 @@
+<idea-plugin>
+    <id>cn.pk5454754.mypatcher</id>
+    <name>Patcher2026</name>
+    <version>1.0.0</version>
+    <vendor email="309618076@qq.com" url="https://github.com/pk5454754/Patcher2026">Pk5454754</vendor>
+
+    <description><![CDATA[
+      IntelliJ-based IDE plugin that exports incremental patch files.
+      <ul>
+        <li>You can manually select the exported modified compiled file or source code file.</li>
+        <li>Modified compiled files or source code files that can be exported according to the modification log in Version Control.</li>
+        <li>You can manually select the file or copy the modified file path in Version Control.</li>
+      </ul>
+      <hr/>
+      一款导出增量补丁文件的IDEA插件
+      <ul>
+        <li>可以手动选择导出的修改过的编译文件或源码文件</li>
+        <li>可以在Version Control中按修改日志导出的修改过的编译文件或源码文件</li>
+        <li>可以手动选择文件或在Version Control中复制修改过的文件路径</li>
+      </ul>
+    ]]></description>
+
+    <change-notes><![CDATA[
+      Version update content:
+      <ul>
+        <li>2026.01.02 Fixed the issue where running the IDEA version later than 2025.1 would result in an error and prevent the export of class files.</li>
+      </ul>
+      <hr/>
+      版本更新内容：
+      <ul>
+        <li>2026.01.02 修复idea的2025.1版本以上运行报错，无法导出class文件问题。</li>
+      </ul>
+    ]]></change-notes>
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.vcs</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.java</depends>
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+    <idea-version since-build="223" until-build="242.*"/>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="cn.pk5454754.common.PatcherConfig"/>
+    </extensions>
+
+    <actions>
+        <group id="cn.pk5454754.patcher2026" text="Patcher2026" popup="true" icon="AllIcons.Nodes.Parameter">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+            <add-to-group group-id="Vcs.RepositoryChangesBrowserMenu" anchor="first"/>
+            <!--            <add-to-group group-id="Vcs.Log.ChangesBrowser" anchor="first"/>-->
+            <add-to-group group-id="Vcs.RepositoryChangesBrowserToolbar" anchor="first"/>
+            <!--<add-to-group group-id="VersionControlsGroup" anchor="first"/>-->
+            <action id="cn.pk5454754.action.CvsChangeListAction" class="cn.pk5454754.action.CvsChangeListAction" text="Copy Change List"/>
+            <action id="cn.pk5454754.action.ExportPatcherAction" class="cn.pk5454754.action.ExportPatcherAction" text="Export Patcher"/>
+        </group>
+
+        <!--<action id="com.sks.ClassesExportAction" class="cn.pk5454754.action.ClassesExportAction" text="Export _Class">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
+        </action>-->
+    </actions>
+</idea-plugin>
