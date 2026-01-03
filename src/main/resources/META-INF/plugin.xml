@@ -1,8 +1,8 @@
 <idea-plugin>
-    <id>cn.pk5454754.mypatcher</id>
+    <id>cn.pk5454754.patcher2026</id>
     <name>Patcher2026</name>
     <version>1.0.0</version>
-    <vendor email="309618076@qq.com" url="https://github.com/pk5454754/Patcher2026">Pk5454754</vendor>
+    <vendor email="pk5454754@qq.com" url="https://github.com/pk5454754/Patcher2026">Pk5454754</vendor>
 
     <description><![CDATA[
       IntelliJ-based IDE plugin that exports incremental patch files.
@@ -34,6 +34,7 @@
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.vcs</depends>
     <depends>com.intellij.modules.lang</depends>
     <depends>com.intellij.modules.java</depends>

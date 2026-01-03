@@ -17,6 +17,9 @@ tasks.withType(JavaExec) {
 group 'cn.pk5454754'
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
 }
@@ -36,10 +39,11 @@ repositories {
     maven {
         url 'https://maven.aliyun.com/nexus/content/repositories/jcenter'
     }
+    maven { url 'https://packages.jetbrains.team/maven/p/ij/intellij-dependencies' }
+    mavenCentral()
 }
 
 dependencies {
-    implementation 'org.apache.commons:commons-lang3:3.14.0'
     testImplementation 'junit:junit:4.13.2'
 }
 
@@ -70,3 +74,7 @@ tasks.named('runIde') {
     maxHeapSize = '2048m'
     jvmArgs = ['-Xmx2048m', '-Didea.cycle.buffer.size=disabled']
 }
+tasks.buildPlugin {
+    // 构建插件任务会自动处理结构
+}
+
