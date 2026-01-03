@@ -34,18 +34,12 @@
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
-    <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.vcs</depends>
     <depends>com.intellij.modules.lang</depends>
     <depends>com.intellij.modules.java</depends>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
     <idea-version since-build="223" until-build="242.*"/>
-
-    <extensions defaultExtensionNs="com.intellij">
-        <projectService serviceImplementation="cn.pk5454754.common.PatcherConfig"/>
-    </extensions>
-
     <actions>
         <group id="cn.pk5454754.patcher2026" text="Patcher2026" popup="true" icon="AllIcons.Nodes.Parameter">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
@@ -62,4 +56,8 @@
             <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
         </action>-->
     </actions>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="cn.pk5454754.common.PatcherConfig"/>
+        <notificationGroup id="Patcher2026_log" displayType="BALLOON"/>
+    </extensions>
 </idea-plugin>

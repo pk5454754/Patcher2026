@@ -8,6 +8,7 @@ import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileVisitor;
@@ -25,8 +26,7 @@ import org.jetbrains.annotations.NotNull;
 public class PatcherUtil {
     private static final String PLUGIN_NAME = "Patcher2026";
     private static final String NOTIFICATION_TITLE = "Patcher2026";
-    private static final NotificationGroup NOTIFICATION_GROUP = new NotificationGroup(PLUGIN_NAME + " log",
-            NotificationDisplayType.BALLOON, true);
+    private static final NotificationGroup NOTIFICATION_GROUP = NotificationGroupManager.getInstance().getNotificationGroup(PLUGIN_NAME + "_log");
     private static final Pattern webPathPattern = Pattern.compile("(.+)/(webapp|WebRoot|web|webapps)/(.+)");
 
     public static PathResult getPathResult(Module module, ListModel<VirtualFile> selectedFiles, String pathPrefix,
@@ -103,19 +103,38 @@ public class PatcherUtil {
     }
 
     public static Module getModule(Module[] modules, AnActionEvent event) {
-        Map<String, Module> moduleMap = new HashMap<>();
-        for (Module module : modules) {
-            Optional<VirtualFile> moduleFile = Optional.ofNullable(module.getModuleFile());
-            moduleFile.map(file -> file.getParent().getPath()).ifPresent(modulePath -> moduleMap.put(modulePath, module));
+        // 如果只有一个模块，直接返回
+        if (modules.length == 1) {
+            return modules[0];
         }
-        // 模块对象
-        Module module = modules.length == 1 ? modules[0] : event.getData(LangDataKeys.MODULE);
+
+        // 从事件中获取模块
+        Module module = event.getData(LangDataKeys.MODULE);
+        if (module != null) {
+            return module;
+        }
+
+        // 获取选中的文件
         VirtualFile[] files = event.getData(LangDataKeys.VIRTUAL_FILE_ARRAY);
-        if (module == null && !isNotSameModule(files)) {
-            String moduleDirectoryPath = PatcherUtil.getModuleDirectoryPath(files);
-            module = moduleMap.get(moduleDirectoryPath);
+        if (files == null || files.length == 0 || isNotSameModule(files)) {
+            return null;
         }
-        return module;
+
+        // 获取项目
+        Project project = event.getProject();
+        if (project == null && modules.length > 0) {
+            project = modules[0].getProject();
+        }
+        if (project == null) {
+            return null;
+        }
+
+        // 使用 ProjectFileIndex 来查找文件所属的模块（这是官方推荐的方式）
+        ProjectFileIndex fileIndex = ProjectFileIndex.getInstance(project);
+        VirtualFile firstFile = files[0];
+        Module foundModule = fileIndex.getModuleForFile(firstFile);
+
+        return foundModule;
     }
 
     private static Pattern modulePattern = Pattern.compile("((.+)/(.+))/(src|WebRoot)/.*");
@@ -164,9 +183,12 @@ public class PatcherUtil {
     }
 
     private static void showNotification(String content, NotificationType type, Project project) {
-        Notifications.Bus.notify(PatcherUtil.NOTIFICATION_GROUP.createNotification(
-                PatcherUtil.NOTIFICATION_TITLE, content, type,
-                NotificationListener.URL_OPENING_LISTENER), project);
+        Notification notification = NOTIFICATION_GROUP.createNotification(
+                NOTIFICATION_TITLE,
+                content,
+                type
+        );
+        Notifications.Bus.notify(notification, project);
     }
 
     private static String getSourceRootPath(List<String> sourceRootPathList, String elementPath) {

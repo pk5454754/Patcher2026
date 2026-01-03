@@ -134,10 +134,19 @@ public class ExportPatcherDialog extends JDialog {
         } else {
             exportPathMap.remove(module.getName());
         }
+
         if (sourceCheckBox.isSelected()) {
-            this.execute(null);
-            this.dispose();
+            // 源代码模式：使用 try-finally 确保窗口关闭
+            try {
+                this.execute(null);
+            } catch (Exception e) {
+                e.printStackTrace();
+                PatcherUtil.showError("Error during export: " + e.getMessage(), event.getProject());
+            } finally {
+                this.dispose();
+            }
         } else {
+            // 编译模式：通过回调关闭
             CompileExecutor compileExecutor = new CompileExecutor(module, event);
             compileExecutor.run(this::execute, this::dispose);
         }
@@ -148,42 +157,46 @@ public class ExportPatcherDialog extends JDialog {
     }
 
     private void execute(CompileContext compileContext) {
-        // 导出目录
-        String exportPath = textField.getText();
-        if (exportPath.endsWith(File.separator)) {
-            exportPath += module.getName() + File.separator;
-        } else {
-            exportPath += File.separator + module.getName() + File.separator;
-        }
-        ListModel<VirtualFile> selectedFiles = fileList.getModel();
-        PathResult result = PatcherUtil.getPathResult(module, selectedFiles, exportPath, compileContext,
-                webPathComboBox.getModel().getSelectedItem().toString());
-        // 删除原有文件
-        if (deleteCheckBox.isSelected()) {
-            FilesUtil.delete(exportPath);
-        }
-        // 导出
-        result.getFromTo().forEach(FilesUtil::copy);
-        // 提示信息
-        StringBuilder message = new StringBuilder();
-        int notExportSize = result.getUnsettledList().size();
-        int fileCount = selectedFiles.getSize() - notExportSize;
-        message.append("Export ").append(fileCount).append(" files. ");
-        if (fileCount != 0) {
-            message.append("(<a href=\"file://").append(exportPath).append("\" target=\"blank\">open</a>)<br>");
-        }
-        if (notExportSize > 0) {
-            message.append("<b>Warning:</b>");
-            for (int i = 0; i < notExportSize; i++) {
-                message.append(result.getUnsettledList().get(i));
-                if (i < notExportSize - 1) {
-                    message.append(",<br>");
-                }
+        try {
+            // 导出目录
+            String exportPath = textField.getText();
+            if (exportPath.endsWith(File.separator)) {
+                exportPath += module.getName() + File.separator;
+            } else {
+                exportPath += File.separator + module.getName() + File.separator;
             }
-            message.append(" <b>is not exported!</b><br><b>Please make sure web path is right and these files are not tests.</b>");
+            ListModel<VirtualFile> selectedFiles = fileList.getModel();
+            PathResult result = PatcherUtil.getPathResult(module, selectedFiles, exportPath, compileContext,
+                    webPathComboBox.getModel().getSelectedItem().toString());
+            // 删除原有文件
+            if (deleteCheckBox.isSelected()) {
+                FilesUtil.delete(exportPath);
+            }
+            // 导出
+            result.getFromTo().forEach(FilesUtil::copy);
+            // 提示信息
+            StringBuilder message = new StringBuilder();
+            int notExportSize = result.getUnsettledList().size();
+            int fileCount = selectedFiles.getSize() - notExportSize;
+            message.append("Export ").append(fileCount).append(" files. ");
+            if (fileCount != 0) {
+                message.append("(<a href=\"file://").append(exportPath).append("\" target=\"_blank\">open</a>)<br>");
+            }
+            if (notExportSize > 0) {
+                message.append("<b>Warning:</b>");
+                for (int i = 0; i < notExportSize; i++) {
+                    message.append(result.getUnsettledList().get(i));
+                    if (i < notExportSize - 1) {
+                        message.append(",<br>");
+                    }
+                }
+                message.append(" <b>is not exported!</b><br><b>Please make sure web path is right and these files are not tests.</b>");
+            }
+            PatcherUtil.showInfo(message.toString(), event.getProject());
+        } catch (Exception e) {
+            e.printStackTrace();
+            PatcherUtil.showError("Error during export: " + e.getMessage(), event.getProject());
+            throw e;
         }
-        PatcherUtil.showInfo(message.toString(), event.getProject());
-        // 在 EDT 中关闭对话框
-        dispose();
     }
 }

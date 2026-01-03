@@ -27,16 +27,12 @@ public class SuccessCompileStatusNotification implements CompileStatusNotificati
     public void finished(boolean aborted, int errors, int warnings, @NotNull CompileContext compileContext) {
         if (aborted) {
             PatcherUtil.showInfo("Code compilation has been aborted.", compileContext.getProject());
-            if (onComplete != null) {
-                onComplete.run();
-            }
+            invokeOnComplete();
             return;
         }
         if (errors != 0) {
             PatcherUtil.showError("Errors occurred while compiling code!", compileContext.getProject());
-            if (onComplete != null) {
-                onComplete.run();
-            }
+            invokeOnComplete();
             return;
         }
         // 在后台任务中执行慢操作，避免在 EDT 中执行
@@ -55,19 +51,21 @@ public class SuccessCompileStatusNotification implements CompileStatusNotificati
             @Override
             public void onSuccess() {
                 // 任务成功完成后，在 EDT 中执行清理操作
-                if (onComplete != null) {
-                    ApplicationManager.getApplication().invokeLater(onComplete);
-                }
+                invokeOnComplete();
             }
 
             @Override
             public void onThrowable(@NotNull Throwable error) {
                 error.printStackTrace();
                 PatcherUtil.showError(ExceptionUtils.getStructuredErrorString(error), project);
-                if (onComplete != null) {
-                    ApplicationManager.getApplication().invokeLater(onComplete);
-                }
+                invokeOnComplete();
             }
         });
+    }
+
+    private void invokeOnComplete() {
+        if (onComplete != null) {
+            ApplicationManager.getApplication().invokeLater(onComplete);
+        }
     }
 }
