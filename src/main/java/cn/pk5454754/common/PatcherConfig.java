@@ -30,7 +30,7 @@ public class PatcherConfig implements PersistentStateComponent<PatcherConfig> {
 
     @Nullable
     public static PatcherConfig getInstance(Project project) {
-        return ServiceManager.getService(project, PatcherConfig.class);
+        return project.getService(PatcherConfig.class);
     }
 
     public Map<String, String> getModulePathMap() {
