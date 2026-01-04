@@ -51,10 +51,6 @@
             <action id="cn.pk5454754.action.CvsChangeListAction" class="cn.pk5454754.action.CvsChangeListAction" text="Copy Change List"/>
             <action id="cn.pk5454754.action.ExportPatcherAction" class="cn.pk5454754.action.ExportPatcherAction" text="Export Patcher"/>
         </group>
-
-        <!--<action id="com.sks.ClassesExportAction" class="cn.pk5454754.action.ClassesExportAction" text="Export _Class">
-            <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
-        </action>-->
     </actions>
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="cn.pk5454754.common.PatcherConfig"/>

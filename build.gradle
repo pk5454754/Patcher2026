@@ -56,7 +56,7 @@ intellij {
 
 patchPluginXml {
     sinceBuild = '223'
-    untilBuild = '242.*'
+    untilBuild = '253.*'
 }
 
 // 禁用可能失败的任务

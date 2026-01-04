@@ -15,6 +15,8 @@ import com.intellij.openapi.vfs.VirtualFileVisitor;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -83,7 +85,7 @@ public class PatcherUtil {
                             pathResult.put(from, to);
                         }
                     } else {
-                        Path from = Paths.get(compilerOutputUrl + outName);
+                        Path from = Paths.get(getCompiledFilePath(compilerOutputUrl, outName));
                         Path to = Paths.get(pathPrefix + webPath + File.separator + "classes" + outName);
                         pathResult.put(from, to);
                     }
@@ -98,10 +100,35 @@ public class PatcherUtil {
             } else {
                 pathResult.addUnsettled(elementPath);
             }
+            try {
+                // 一句话搞定：写入文件。如果文件不存在会自动创建；如果存在则覆盖
+                Files.write(Paths.get("G:/log/log.txt"), pathResult.getFromTo().toString().getBytes());
+
+                System.out.println("写入成功！");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return pathResult;
     }
+    // 在 PatcherUtil.java 中添加辅助方法
+    private static String getCompiledFilePath(String compilerOutputUrl, String outName) {
+        // 尝试从 classes 目录获取
+        Path classPath = Paths.get(compilerOutputUrl + outName);
+        if (Files.exists(classPath)) {
+            return classPath.toString();
+        }
 
+        // 尝试从 resources 目录获取（将 classes 替换为 resources）
+        String resourcePath = compilerOutputUrl.replace("classes/java/main", "resources/main") + outName;
+        Path resourceFilePath = Paths.get(resourcePath);
+        if (Files.exists(resourceFilePath)) {
+            return resourceFilePath.toString();
+        }
+
+        // 都不存在，返回原始路径（让后续调用报错）
+        return compilerOutputUrl + outName;
+    }
     public static Module getModule(Module[] modules, AnActionEvent event) {
         // 如果只有一个模块，直接返回
         if (modules.length == 1) {

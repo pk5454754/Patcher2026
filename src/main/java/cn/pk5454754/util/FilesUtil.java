@@ -44,7 +44,9 @@ public class FilesUtil {
 
     public static void copy(Path from, Path to) {
         try {
-            if (!Files.exists(to)) {
+            // 只创建父目录，而不是整个路径
+            Path parentDir = to.getParent();
+            if (parentDir != null && !Files.exists(parentDir)) {
                 Files.createDirectories(to);
             }
             Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING);
