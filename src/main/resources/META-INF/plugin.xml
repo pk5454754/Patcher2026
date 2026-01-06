@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>cn.pk5454754.patcher2026</id>
     <name>Patcher2026</name>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <vendor email="pk5454754@qq.com" url="https://github.com/pk5454754/Patcher2026">Pk5454754</vendor>
 
     <description><![CDATA[
@@ -29,6 +29,7 @@
       版本更新内容：
       <ul>
         <li>2026.01.02 修复idea的2025.1版本以上运行报错，无法导出class文件问题。</li>
+        <li>2026.01.06 修复线程安全问题，修复 "Read access is allowed from inside read-action only" 错误</li>
       </ul>
     ]]></change-notes>
 
