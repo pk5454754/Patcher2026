@@ -1,5 +1,24 @@
 package cn.pk5454754.form;
 
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.LangDataKeys;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.compiler.CompileContext;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
+import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.ToolbarDecorator;
+import com.intellij.ui.components.JBList;
+import org.jetbrains.annotations.NotNull;
+
+import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -9,21 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import javax.swing.*;
-
-import org.jetbrains.annotations.NotNull;
-
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.LangDataKeys;
-import com.intellij.openapi.compiler.CompileContext;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.ToolbarDecorator;
-import com.intellij.ui.components.JBList;
 
 import cn.pk5454754.common.PatcherConfig;
 import cn.pk5454754.common.PatcherConstant;
@@ -137,14 +141,33 @@ public class ExportPatcherDialog extends JDialog {
 
         if (sourceCheckBox.isSelected()) {
             // 源代码模式：使用 try-finally 确保窗口关闭
-            try {
-                this.execute(null);
-            } catch (Exception e) {
-                e.printStackTrace();
-                PatcherUtil.showError("Error during export: " + e.getMessage(), event.getProject());
-            } finally {
-                this.dispose();
-            }
+            // 在后台任务中执行导出，避免在 EDT 中执行耗时操作
+            Project project = event.getProject();
+            ProgressManager.getInstance().run(new Task.Backgroundable(project, "Exporting Source Files...", true) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    try {
+                        // 在后台任务中执行导出，execute 方法内部会处理 read-action
+                        ExportPatcherDialog.this.execute(null);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        PatcherUtil.showError("Error during export: " + e.getMessage(), project);
+                    }
+                }
+
+                @Override
+                public void onSuccess() {
+                    // 任务成功完成后，关闭对话框
+                    ExportPatcherDialog.this.dispose();
+                }
+
+                @Override
+                public void onThrowable(@NotNull Throwable error) {
+                    error.printStackTrace();
+                    PatcherUtil.showError("Error during export: " + error.getMessage(), project);
+                    ExportPatcherDialog.this.dispose();
+                }
+            });
         } else {
             // 编译模式：通过回调关闭
             CompileExecutor compileExecutor = new CompileExecutor(module, event);
@@ -165,12 +188,27 @@ public class ExportPatcherDialog extends JDialog {
             } else {
                 exportPath += File.separator + module.getName() + File.separator;
             }
-            ListModel<VirtualFile> selectedFiles = fileList.getModel();
-            PathResult result = PatcherUtil.getPathResult(module, selectedFiles, exportPath, compileContext,
-                    webPathComboBox.getModel().getSelectedItem().toString());
+            final ListModel<VirtualFile> selectedFiles = fileList.getModel();
+            final String webPath = webPathComboBox.getModel().getSelectedItem().toString();
+            final String finalExportPath = exportPath;
+
+            // 在 read-action 中获取路径结果（如果在后台线程中，read-action 会自动处理）
+            PathResult result;
+            if (ApplicationManager.getApplication().isDispatchThread()) {
+                // 在 EDT 中，不需要显式使用 read-action
+                result = PatcherUtil.getPathResult(module, selectedFiles, exportPath, compileContext, webPath);
+            } else {
+                // 在后台线程中，使用 read-action
+                // 创建局部 final 副本以避免 lambda 问题
+                final Module moduleRef = this.module;
+                result = ReadAction.compute(() ->
+                    PatcherUtil.getPathResult(moduleRef, selectedFiles, finalExportPath, compileContext, webPath)
+                );
+            }
+
             // 删除原有文件
             if (deleteCheckBox.isSelected()) {
-                FilesUtil.delete(exportPath);
+                FilesUtil.delete(finalExportPath);
             }
             // 导出
             result.getFromTo().forEach(FilesUtil::copy);
@@ -180,7 +218,7 @@ public class ExportPatcherDialog extends JDialog {
             int fileCount = selectedFiles.getSize() - notExportSize;
             message.append("Export ").append(fileCount).append(" files. ");
             if (fileCount != 0) {
-                message.append("(<a href=\"file://").append(exportPath).append("\" target=\"_blank\">open</a>)<br>");
+                message.append("(<a href=\"file://").append(finalExportPath).append("\" target=\"_blank\">open</a>)<br>");
             }
             if (notExportSize > 0) {
                 message.append("<b>Warning:</b>");

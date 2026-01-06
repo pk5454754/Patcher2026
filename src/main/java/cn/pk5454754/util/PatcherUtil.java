@@ -100,14 +100,6 @@ public class PatcherUtil {
             } else {
                 pathResult.addUnsettled(elementPath);
             }
-            try {
-                // 一句话搞定：写入文件。如果文件不存在会自动创建；如果存在则覆盖
-                Files.write(Paths.get("G:/log/log.txt"), pathResult.getFromTo().toString().getBytes());
-
-                System.out.println("写入成功！");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
         return pathResult;
     }

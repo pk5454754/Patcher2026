@@ -16,4 +16,5 @@ Patcher2026是一款导出增量补丁文件的IDEA插件。
 
 ## 更新日志
 
-1. 2026.01.02 修复idea的2025.1版本以上运行报错，无法导出class文件问题。
+1. 2026.01.06 修复线程安全问题，修复 "Read access is allowed from inside read-action only" 错误
+2. 2026.01.02 修复idea的2025.1版本以上运行报错，无法导出class文件问题。

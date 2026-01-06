@@ -1,6 +1,7 @@
 package cn.pk5454754.common;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.compiler.CompileStatusNotification;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -41,7 +42,8 @@ public class SuccessCompileStatusNotification implements CompileStatusNotificati
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 try {
-                    consumer.accept(compileContext);
+                    // 在 read-action 中执行 consumer，确保线程安全
+                    ReadAction.run(() -> consumer.accept(compileContext));
                 } catch (Exception e) {
                     e.printStackTrace();
                     PatcherUtil.showError(ExceptionUtils.getStructuredErrorString(e), project);
