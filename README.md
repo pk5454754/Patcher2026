@@ -25,7 +25,7 @@ Patcher2026是一款导出增量补丁文件的IDEA插件。
 - **SVN 集成状态**：需要安装 SVN 插件并配置 SVN 命令行工具
 - **配置步骤**：
   1. 打开 `File -> Settings -> Plugins`
-  2. 搜索并安装 `Subversion Integration` 插件
+  2. 搜索并安装 `Subversion` 插件
   3. 安装 SVN 命令行工具（如 TortoiseSVN 或 CollabNet）
   4. 打开 `File -> Settings -> Version Control -> Subversion`
   5. 配置 `Use command line client`，指向 `svn.exe` 路径
