@@ -213,7 +213,9 @@ public class ExportPatcherDialog extends JDialog {
             int fileCount = selectedFiles.getSize() - notExportSize;
             message.append("Export ").append(fileCount).append(" files. ");
             if (fileCount != 0) {
-                message.append("(<a href=\"file://").append(finalExportPath).append("\" target=\"_blank\">open</a>)<br>");
+                // file URI 在 Windows 上需要正斜杠格式: file:///G:/path
+                String fileUrl = "file:///" + finalExportPath.replace('\\', '/');
+                message.append("(<a href=\"").append(fileUrl).append("\">open</a>)<br>");
             }
             if (notExportSize > 0) {
                 message.append("<b>Warning:</b>");

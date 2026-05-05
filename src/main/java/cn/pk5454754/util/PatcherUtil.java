@@ -3,6 +3,8 @@ package cn.pk5454754.util;
 import com.intellij.ide.projectView.impl.ProjectRootsUtil;
 import com.intellij.notification.*;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.ide.actions.RevealFileAction;
+import javax.swing.event.HyperlinkEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.module.Module;
@@ -207,6 +209,13 @@ public class PatcherUtil {
                 content,
                 type
         );
+        notification.setListener((n, hyperlinkEvent) -> {
+            java.net.URL url = hyperlinkEvent.getURL();
+            if (url != null && "file".equals(url.getProtocol())) {
+                String path = url.getPath().replace('/', File.separatorChar);
+                RevealFileAction.openFile(new File(path));
+            }
+        });
         Notifications.Bus.notify(notification, project);
     }
 
