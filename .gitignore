@@ -2,3 +2,10 @@
 build/**
 .idea/**
 out/**
+/build
+/.claude
+/.gradle
+/.idea
+/.intellijPlatform
+/.kotlin
+/out

@@ -1,9 +1,9 @@
 package cn.pk5454754.form;
 
+import cn.pk5454754.common.ReadActionCompat;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -128,8 +128,8 @@ public class ExportPatcherDialog extends JDialog {
             Messages.showErrorDialog("Please select at least one file!", "Error");
             return;
         }
-        if (module == null) {
-            Messages.showErrorDialog(this, "Please select module!", "Error");
+        if (module == null || module.isDisposed()) {
+            Messages.showErrorDialog(this, "Module is not available. Please reopen the dialog.", "Error");
             return;
         }
         Map<String, String> exportPathMap = config.getExportPathMap();
@@ -139,40 +139,36 @@ public class ExportPatcherDialog extends JDialog {
             exportPathMap.remove(module.getName());
         }
 
-        if (sourceCheckBox.isSelected()) {
-            // 源代码模式：使用 try-finally 确保窗口关闭
-            // 在后台任务中执行导出，避免在 EDT 中执行耗时操作
-            Project project = event.getProject();
-            ProgressManager.getInstance().run(new Task.Backgroundable(project, "Exporting Source Files...", true) {
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
-                    try {
-                        // 在后台任务中执行导出，execute 方法内部会处理 read-action
-                        ExportPatcherDialog.this.execute(null);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        PatcherUtil.showError("Error during export: " + e.getMessage(), project);
+        // 先关闭对话框，释放模态 EDT 事件循环
+        // 否则 ProgressManager.run(Task.Backgroundable) 无法启动后台任务
+        dispose();
+
+        // 在 EDT 释放后启动导出任务
+        ApplicationManager.getApplication().invokeLater(() -> {
+            if (sourceCheckBox.isSelected()) {
+                Project project = event.getProject();
+                ProgressManager.getInstance().run(new Task.Backgroundable(project, "Exporting Source Files...", true) {
+                    @Override
+                    public void run(@NotNull ProgressIndicator indicator) {
+                        try {
+                            ExportPatcherDialog.this.execute(null);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            PatcherUtil.showError("Error during export: " + e.getMessage(), project);
+                        }
                     }
-                }
 
-                @Override
-                public void onSuccess() {
-                    // 任务成功完成后，关闭对话框
-                    ExportPatcherDialog.this.dispose();
-                }
-
-                @Override
-                public void onThrowable(@NotNull Throwable error) {
-                    error.printStackTrace();
-                    PatcherUtil.showError("Error during export: " + error.getMessage(), project);
-                    ExportPatcherDialog.this.dispose();
-                }
-            });
-        } else {
-            // 编译模式：通过回调关闭
-            CompileExecutor compileExecutor = new CompileExecutor(module, event);
-            compileExecutor.run(this::execute, this::dispose);
-        }
+                    @Override
+                    public void onThrowable(@NotNull Throwable error) {
+                        error.printStackTrace();
+                        PatcherUtil.showError("Error during export: " + error.getMessage(), event.getProject());
+                    }
+                });
+            } else {
+                CompileExecutor compileExecutor = new CompileExecutor(module, event);
+                compileExecutor.run(this::execute, null);
+            }
+        });
     }
 
     private void onCancel() {
@@ -198,10 +194,9 @@ public class ExportPatcherDialog extends JDialog {
                 // 在 EDT 中，不需要显式使用 read-action
                 result = PatcherUtil.getPathResult(module, selectedFiles, exportPath, compileContext, webPath);
             } else {
-                // 在后台线程中，使用 read-action
-                // 创建局部 final 副本以避免 lambda 问题
+                // 在后台线程中，使用协程 readAction 替代已弃用的 ReadAction.computeBlocking
                 final Module moduleRef = this.module;
-                result = ReadAction.compute(() ->
+                result = ReadActionCompat.computeInReadActionWithResult(() ->
                     PatcherUtil.getPathResult(moduleRef, selectedFiles, finalExportPath, compileContext, webPath)
                 );
             }

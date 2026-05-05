@@ -23,6 +23,10 @@ public class CompileExecutor {
 
     public void run(Consumer<CompileContext> execute, Runnable clean) {
         try {
+            if (module.isDisposed()) {
+                PatcherUtil.showError("Module is already disposed.", event.getProject());
+                return;
+            }
             CompilerManager compilerManager = CompilerManager.getInstance(Objects.requireNonNull(event.getProject()));
             compilerManager.make(module, new SuccessCompileStatusNotification(execute, clean));
             PatcherUtil.showInfo("Code is compiling.", event.getProject());
