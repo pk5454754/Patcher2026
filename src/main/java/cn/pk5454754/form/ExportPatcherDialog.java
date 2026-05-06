@@ -213,9 +213,7 @@ public class ExportPatcherDialog extends JDialog {
             int fileCount = selectedFiles.getSize() - notExportSize;
             message.append("Export ").append(fileCount).append(" files. ");
             if (fileCount != 0) {
-                // file URI 在 Windows 上需要正斜杠格式: file:///G:/path
-                String fileUrl = "file:///" + finalExportPath.replace('\\', '/');
-                message.append("(<a href=\"").append(fileUrl).append("\">open</a>)<br>");
+                message.append("<br>");
             }
             if (notExportSize > 0) {
                 message.append("<b>Warning:</b>");
@@ -227,7 +225,8 @@ public class ExportPatcherDialog extends JDialog {
                 }
                 message.append(" <b>is not exported!</b><br><b>Please make sure web path is right and these files are not tests.</b>");
             }
-            PatcherUtil.showInfo(message.toString(), event.getProject());
+            File openDir = (fileCount != 0) ? new File(finalExportPath) : null;
+            PatcherUtil.showInfo(message.toString(), event.getProject(), openDir);
         } catch (Exception e) {
             e.printStackTrace();
             PatcherUtil.showError("Error during export: " + e.getMessage(), event.getProject());

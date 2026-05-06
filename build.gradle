@@ -71,7 +71,7 @@ intellijPlatform {
         // 插件名称
         name = "Patcher2026"
         // 插件版本
-        version = "1.1.0" //
+        version = project.version.toString()//
         // 插件描述
         description = "IntelliJ-based IDE plugin that exports incremental patch files.一款导出增量补丁文件的IDEA插件"
 

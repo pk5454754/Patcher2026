@@ -2,9 +2,9 @@ package cn.pk5454754.util;
 
 import com.intellij.ide.projectView.impl.ProjectRootsUtil;
 import com.intellij.notification.*;
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.ide.actions.RevealFileAction;
-import javax.swing.event.HyperlinkEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.module.Module;
@@ -192,30 +192,32 @@ public class PatcherUtil {
     }
 
     public static void showInfo(String content, Project project) {
-        showNotification(content, NotificationType.INFORMATION, project);
+        showNotification(content, NotificationType.INFORMATION, project, null);
+    }
+
+    public static void showInfo(String content, Project project, File openDir) {
+        showNotification(content, NotificationType.INFORMATION, project, openDir);
     }
 
     public static void showError(String content, Project project) {
-        showNotification(content, NotificationType.ERROR, project);
+        showNotification(content, NotificationType.ERROR, project, null);
     }
 
     public static void showWarning(String content, Project project) {
-        showNotification(content, NotificationType.WARNING, project);
+        showNotification(content, NotificationType.WARNING, project, null);
     }
 
-    private static void showNotification(String content, NotificationType type, Project project) {
-        Notification notification = NOTIFICATION_GROUP.createNotification(
-                NOTIFICATION_TITLE,
-                content,
-                type
-        );
-        notification.setListener((n, hyperlinkEvent) -> {
-            java.net.URL url = hyperlinkEvent.getURL();
-            if (url != null && "file".equals(url.getProtocol())) {
-                String path = url.getPath().replace('/', File.separatorChar);
-                RevealFileAction.openFile(new File(path));
-            }
-        });
+    private static void showNotification(String content, NotificationType type, Project project, File openDir) {
+        Notification notification = NOTIFICATION_GROUP.createNotification(content, type);
+        notification.setTitle(NOTIFICATION_TITLE);
+        if (openDir != null) {
+            notification.addAction(new AnAction("Open") {
+                @Override
+                public void actionPerformed(@NotNull AnActionEvent e) {
+                    RevealFileAction.openFile(openDir);
+                }
+            });
+        }
         Notifications.Bus.notify(notification, project);
     }
 
