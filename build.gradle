@@ -99,6 +99,7 @@ intellijPlatform {
               Version update content:
               <ul>
                 <li>2026.01.02 Fixed the issue where running the IDEA version later than 2025.1 would result in an error and prevent the export of class files.</li>
+                <li>2026.10.07 Fixed the deprecated API usage ReadAction.computeCancellable reported by the plugin verifier against IntelliJ IDEA 2026.3 EAP.</li>
               </ul>
               <hr/>
               版本更新内容：
@@ -106,6 +107,7 @@ intellijPlatform {
                 <li>2026.01.02 修复idea的2025.1版本以上运行报错，无法导出class文件问题。</li>
                 <li>2026.01.06 修复线程安全问题，修复 "Read access is allowed from inside read-action only" 错误</li>
                 <li>2026.05.05 升级kotlin版本为2.2.21，升级gradle版本为9.4.1，使用Kotlin替代JAVA即将弃用的API  ReadAction.compute/ReadAction.run</li>
+                <li>2026.10.07 修复插件校验器在 IntelliJ IDEA 2026.3 EAP 上报出的弃用 API ReadAction.computeCancellable 问题</li>
               </ul>
         """.stripIndent()
         ideaVersion {

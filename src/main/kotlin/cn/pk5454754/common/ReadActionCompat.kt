@@ -1,13 +1,14 @@
 package cn.pk5454754.common
 
-import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.readActionBlocking
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 suspend fun <T> performReadAction(block: () -> T): T {
     return withContext(Dispatchers.Default) {
-        ReadAction.computeCancellable<T, Throwable> { block() }
+        // 使用协程版读操作 API 替代已弃用的 ReadAction.computeCancellable
+        readActionBlocking { block() }
     }
 }
 
