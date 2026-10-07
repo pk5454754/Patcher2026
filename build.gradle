@@ -4,7 +4,8 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.14.0"
 }
 
-// 配置 Gradle 缓存策略
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
@@ -67,6 +68,17 @@ dependencies {
 
 // 4. 在 intellijPlatform 扩展中配置插件元数据
 intellijPlatform {
+    pluginVerification {
+        ides {
+            create(IntelliJPlatformType.IntellijIdeaUltimate, "2026.1.2")
+        }
+        failureLevel = [
+            "COMPATIBILITY_PROBLEMS",
+            "INTERNAL_API_USAGES"
+        ]
+        verificationReportsFormats = ["plain", "html", "markdown"]
+    }
+
     pluginConfiguration {
         // 插件名称
         name = "Patcher2026"
